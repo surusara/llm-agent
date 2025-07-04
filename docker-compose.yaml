@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fxdata
+      MYSQL_USER: fxuser
+      MYSQL_PASSWORD: fxpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db-init:/docker-entrypoint-initdb.d
+
+  backend-java:
+    build: ./backend-java
+    container_name: fx-java-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/fxdata
+      SPRING_DATASOURCE_USERNAME: fxuser
+      SPRING_DATASOURCE_PASSWORD: fxpass
+    depends_on:
+      - mysql
+
+  backend-python:
+    build: ./backend-python
+    container_name: fx-llm-agent
+    ports:
+      - "9000:9000"
+    env_file:
+      - ./backend-python/.env
+    depends_on:
+      - backend-java
+
+  frontend-react:
+    build: ./frontend-react
+    container_name: fx-ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-python
+
+volumes:
+  mysql_data:
