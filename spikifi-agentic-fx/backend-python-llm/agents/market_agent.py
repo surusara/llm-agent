@@ -25,7 +25,7 @@ def create_market_agent():
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an economic analyst who classifies market events."},
-                    {"role": "user", "content": f"Classify this market event as one of: Scheduled Economic, Unscheduled Economic, Geopolitical.\n\nEvent: {raw_event_text}"}
+                    {"role": "user", "content": f"Classify this event as Scheduled Economic, Unscheduled Economic, or Geopolitical:\n\nEvent: {raw_event_text}"}
                 ]
             )
 
