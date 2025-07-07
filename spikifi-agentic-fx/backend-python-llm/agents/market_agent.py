@@ -1,3 +1,5 @@
+# backend-python-llm/agents/market_agent.py
+
 import requests
 import openai
 import os
@@ -10,43 +12,28 @@ openai.organization = os.getenv("OPENAI_ORG")
 def create_market_agent():
     def fetch_market_events(state):
         """
-        get_market_events: Fetches market events from backend and classifies them via LLM.
+        get_market_events: Fetches live market events and classifies them.
         """
-        input_text = state.input.get("query", "")
+        input_text = state.input.get("message", "")
+
         try:
             response = requests.post(
                 "http://backend-java:8080/live-market-event",
-                json={"query": input_text}
+                json={"message": input_text}
             )
-            raw_event_text = response.json().get("response", "")
-
-            classification_prompt = f"""
-Classify the following market event into one of:
-- Scheduled Economic Event
-- Unscheduled Economic Event
-- Geopolitical Event
-
-Event: {raw_event_text}
-
-Also explain the rationale behind the classification.
-"""
+            raw_event = response.json().get("response", "")
 
             completion = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are an economic analyst."},
-                    {"role": "user", "content": classification_prompt}
+                    {"role": "system", "content": "You classify market events."},
+                    {"role": "user", "content": f"Classify: {raw_event} into Scheduled, Unscheduled or Geopolitical."}
                 ]
             )
             classification = completion.choices[0].message["content"]
+            return [{"output": {"event": raw_event, "classification": classification}}]
 
-            return [{
-                "output": {
-                    "event": raw_event_text,
-                    "classification": classification
-                }
-            }]
         except Exception as e:
-            return [{"output": f"Error fetching/classifying event: {str(e)}"}]
+            return [{"output": f"Error: {str(e)}"}]
 
     return ToolNode([fetch_market_events])
