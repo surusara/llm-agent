@@ -2,46 +2,53 @@
 
 import openai
 import os
+from langgraph.prebuilt import ParallelToolNode
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_base = os.getenv("OPENAI_API_BASE")
 openai.organization = os.getenv("OPENAI_ORG")
 
-def main_agent(state):
-    """
-    Routes user input to one or more tools:
-    - get_volume_forecast
-    - get_market_events
-    - explain_scenario
-    Returns a dict with tool_calls for LangGraph multi-tool pattern.
-    """
-    user_input = state.input.get("message", "")
+def create_main_agent():
+    def route_tools(state):
+        """
+        Routes the user input to one or more tools based on LLM reasoning.
+        Tools:
+        - get_volume_forecast
+        - get_market_events
+        - explain_scenario
+        """
+        user_input = state.input.get("message", "")
 
-    decision_prompt = f"""
-You are a routing assistant.
+        if not user_input:
+            return []
 
-Decide which of the following tools to use based on the user input:
-1. get_volume_forecast → if user wants volume prediction.
-2. get_market_events → if user is asking about market triggers.
-3. explain_scenario → if user wants a human-style explanation.
+        # Prompt to decide which tools to use
+        decision_prompt = f"""
+        Decide which of the following tools to use:
+        1. get_volume_forecast → if user wants volume prediction.
+        2. get_market_events → if user is asking about market triggers.
+        3. explain_scenario → if user wants a summary explanation.
 
-User said: "{user_input}"
+        User said: "{user_input}"
 
-Reply ONLY with a comma-separated list of tool names.
-"""
+        Reply with a comma-separated list like: get_volume_forecast, explain_scenario
+        """
 
-    completion = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You help route user queries to the right agent."},
-            {"role": "user", "content": decision_prompt}
-        ]
-    )
+        try:
+            completion = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You help route user queries to the correct agent(s)."},
+                    {"role": "user", "content": decision_prompt}
+                ]
+            )
 
-    tool_names = [tool.strip() for tool in completion.choices[0].message["content"].split(",")]
-    state_dict = state.dict() if hasattr(state, "dict") else dict(state)
-    state_dict["tool_calls"] = [
-        {"tool": name, "input": state.input}
-        for name in tool_names
-    ]
-    return state_dict
+            raw_output = completion.choices[0].message["content"]
+            tool_names = [t.strip() for t in raw_output.split(",") if t.strip()]
+
+            return [{"tool": t, "input": state.input} for t in tool_names]
+
+        except Exception as e:
+            return [{"tool": "explain_scenario", "input": {"message": f"Routing failed: {str(e)}"}}]
+
+    return ParallelToolNode(route_tools)
