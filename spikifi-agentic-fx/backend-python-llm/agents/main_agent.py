@@ -9,33 +9,37 @@ openai.organization = os.getenv("OPENAI_ORG")
 def create_main_agent():
     def main_agent(state):
         """
-        Routes the user input to the appropriate tool(s):
+        main_agent: Routes user input to one or more of:
         - get_volume_forecast
         - get_market_events
         - explain_scenario
         """
-        user_input = state.input
+        user_input = state.input.get("query", "")
         memory = state.memory or ""
 
         prompt = f"""
 You are a routing assistant.
-Decide which of the following tools to use based on the user input:
-1. get_volume_forecast
-2. get_market_events
-3. explain_scenario
-User said: \"{user_input}\"
-Reply ONLY with a comma-separated list of tool names.
+
+Choose tools based on input:
+- get_volume_forecast → volume prediction
+- get_market_events → market events
+- explain_scenario → natural language explanation
+
+User said: "{user_input}"
+Reply with comma-separated tool names only.
 """
 
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You help route user queries to the right agent."},
+                {"role": "system", "content": "You help decide which tool(s) to call."},
                 {"role": "user", "content": prompt}
             ]
         )
+        tool_list = response.choices[0].message["content"]
+        tools = [tool.strip() for tool in tool_list.split(",")]
 
-        tools = [tool.strip() for tool in response.choices[0].message["content"].split(",")]
-        return [{"tool": tool, "input": user_input} for tool in tools]
+        # Output tool call instruction(s)
+        return [{"tool": tool, "input": state.input} for tool in tools]
 
     return ToolNode([main_agent])
