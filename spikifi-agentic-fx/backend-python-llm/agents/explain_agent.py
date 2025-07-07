@@ -23,9 +23,13 @@ def create_explain_agent():
                     {"role": "user", "content": f"Explain FX impact for: {input_text}"}
                 ]
             )
-            return [{"output": response.choices[0].message["content"]}]
+            state_dict = state.dict() if hasattr(state, "dict") else dict(state)
+            state_dict["output"] = response.choices[0].message["content"]
+            return state_dict
 
         except Exception as e:
-            return [{"output": f"Error explaining: {str(e)}"}]
+            state_dict = state.dict() if hasattr(state, "dict") else dict(state)
+            state_dict["output"] = f"Error explaining: {str(e)}"
+            return state_dict
 
     return ToolNode([explain])
