@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional, Any, Dict
+from typing import Optional, Any
 
 class MemoryState(BaseModel):
-    input: Dict[str, Any]
+    input: dict  # e.g., {"message": "..."}
     memory: Optional[str] = ""
     output: Optional[Any] = None
