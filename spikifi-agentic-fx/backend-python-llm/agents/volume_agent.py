@@ -1,3 +1,5 @@
+# backend-python-llm/agents/volume_agent.py
+
 import requests
 from langgraph.prebuilt import ToolNode
 
@@ -6,11 +8,11 @@ def create_volume_agent():
         """
         get_volume_forecast: Calls ML API to get FX volume forecast.
         """
-        input_text = state.input.get("query", "")
+        input_text = state.input.get("message", "")
         try:
             response = requests.post(
                 "http://backend-python-ml:8500/predict",
-                json={"query": input_text}
+                json={"message": input_text}
             )
             return [{"output": response.json()}]
         except Exception as e:
