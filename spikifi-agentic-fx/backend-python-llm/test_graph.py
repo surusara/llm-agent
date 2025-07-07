@@ -37,3 +37,4 @@ if __name__ == "__main__":
     result = graph.invoke(test_input)
     print("\n--- Final Output ---")
     print(result.output)
+    print(result.output)
