@@ -19,15 +19,12 @@ def create_main_agent():
 
         prompt = f"""
 You are a routing assistant.
-
 Decide which of the following tools to use based on the user input:
-1. get_volume_forecast → if user wants volume prediction.
-2. get_market_events → if user is asking about market triggers.
-3. explain_scenario → if user wants a human-style explanation or summary.
-
-User said: "{user_input}"
-
-Reply ONLY with the tool name(s) as a comma-separated list.
+1. get_volume_forecast
+2. get_market_events
+3. explain_scenario
+User said: \"{user_input}\"
+Reply ONLY with a comma-separated list of tool names.
 """
 
         response = openai.ChatCompletion.create(
