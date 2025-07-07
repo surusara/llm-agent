@@ -41,3 +41,8 @@ def create_main_agent():
         return {"tool": tool_name, "input": state.input}
 
     return ToolNode(route_tools)
+
+
+    state_dict = state.dict() if hasattr(state, "dict") else dict(state)
+state_dict["tool_calls"] = [{"tool": name, "input": state.input} for name in tool_names]
+return state_dict
