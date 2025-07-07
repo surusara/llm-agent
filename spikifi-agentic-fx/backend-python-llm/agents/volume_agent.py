@@ -6,7 +6,7 @@ def create_volume_agent():
         """
         get_volume_forecast: Calls ML API to get FX volume forecast.
         """
-        input_text = state.input
+        input_text = state.input.get("query", "")
         try:
             response = requests.post(
                 "http://backend-python-ml:8500/predict",
