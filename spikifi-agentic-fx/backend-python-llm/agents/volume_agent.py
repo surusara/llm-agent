@@ -1,24 +1,19 @@
-# agents/volume_agent.py
-
 import requests
 from langgraph.prebuilt import ToolNode
 
 def create_volume_agent():
     def fetch_volume(state):
         """
-        get_volume_forecast: Predicts FX trade volume using ML.
-        This tool calls the ML model API and returns a prediction based on the user's query.
+        get_volume_forecast: Calls ML API to get FX volume forecast.
         """
         input_text = state.input
-
         try:
             response = requests.post(
                 "http://backend-python-ml:8500/predict",
                 json={"query": input_text}
             )
-            response_data = response.json()
-            return [{"output": response_data}]
+            return [{"output": response.json()}]
         except Exception as e:
             return [{"output": f"Error fetching volume forecast: {str(e)}"}]
 
-    return ToolNode(fetch_volume)
+    return ToolNode([fetch_volume])
