@@ -3,18 +3,29 @@
 from graph import build_graph
 from memory_state import MemoryState
 
-if __name__ == "__main__":
+def run_test():
+    # Build the LangGraph instance
     graph = build_graph()
 
-    # Sample query
-    user_query = {"message": "What is the FX volume forecast for tomorrow with ECB meeting?"}
-    state = MemoryState(input=user_query)
+    # Simulate a user message
+    user_query = {
+        "message": "Will there be any FX volume spike tomorrow due to ECB announcement?"
+    }
 
-    print("\n==== Invoking LangGraph ====")
-    for step in graph.stream(state):
-        print(f"\n>> Step: {step.key}")
-        print(f"State: {step.value}")
+    # Initialize memory state
+    initial_state = MemoryState(input=user_query)
 
-    print("\n==== Final Output ====")
-    final_state = graph.invoke(state)
+    # Run the graph with the initial input
+    print("Invoking graph with user input...")
+    final_state = graph.invoke(initial_state)
+
+    # Print final output
+    print("\n=== Final Output ===")
+    print(final_state.output)
+
+    # Optional: Show entire state if needed
+    print("\n=== Full Memory State ===")
     print(final_state)
+
+if __name__ == "__main__":
+    run_test()
